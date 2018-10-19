@@ -240,10 +240,12 @@ class ConservativeBurgersEquation(BurgersEquation):
     del y  # unused
     y = spatial_derivatives[0]
     y_x = spatial_derivatives[1]
-    flux = self.eta * y_x - 0.5 * y ** 2
+    flux = self.flux(y, y_x)
     y_t = staggered_first_derivative(flux, self.grid.solution_dx)
     return y_t
 
+  def flux(self, y, y_x):
+    return self.eta * y_x - 0.5 * y ** 2
 
 class KdVEquation(Equation):
   """Korteweg-de Vries (KdV) equation with random initial conditions."""

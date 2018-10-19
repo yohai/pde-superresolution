@@ -25,10 +25,12 @@ from tensorflow.contrib.training.python.training import hparam_pb2  # pylint: di
 import numpy as np
 import scipy.fftpack
 import scipy.integrate
+from scipy.ndimage.filters import convolve1d
 import tensorflow as tf
 from typing import Tuple
 import xarray
-
+from .WENO import WENO
+from .equations import staggered_first_derivative
 from pde_superresolution import equations  # pylint: disable=g-bad-import-order
 from pde_superresolution import model  # pylint: disable=g-bad-import-order
 from pde_superresolution import training  # pylint: disable=g-bad-import-order
@@ -109,6 +111,24 @@ class SpectralDifferentiator(Differentiator):
                          for order in self.equation.DERIVATIVE_ORDERS}
     time_derivative = self.equation.equation_of_motion(y, space_derivatives)
     return self.equation.finalize_time_derivative(t, time_derivative)
+
+class WENODifferentiator(Differentiator):
+  """Calculate derivatives using a 5th order WENO.py method."""
+
+  def __init__(self, equation: equations.Equation, k: int = 3):
+    assert hasattr(equation, 'flux')
+    self.equation = equation
+    self.weno = WENO(k=k, dx=equation.grid.reference_dx)
+    self.alpha = 1.0  # For Lax-Friedrich monotone flux
+    self.h = lambda left, right: 0.5 * (left + right - self.alpha * (right - left))  # Lax-Friedrich monotone flux
+
+  def __call__(self, t: float, y: np.ndarray) -> np.ndarray:
+    y_L, y_R, yp_L, yp_R= self.weno.reconstruct(y)
+    fL = self.equation.flux(y_L, yp_L)
+    fR = self.equation.flux(y_R, yp_R)
+    flux = self.h(fL, fR)
+    y_t = staggered_first_derivative(flux, self.equation.grid.reference_dx)
+    return self.equation.finalize_time_derivative(t, y_t)
 
 
 def odeint(equation: equations.Equation,
