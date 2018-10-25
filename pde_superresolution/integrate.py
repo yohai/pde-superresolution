@@ -112,22 +112,20 @@ class SpectralDifferentiator(Differentiator):
     time_derivative = self.equation.equation_of_motion(y, space_derivatives)
     return self.equation.finalize_time_derivative(t, time_derivative)
 
+
 class WENODifferentiator(Differentiator):
   """Calculate derivatives using a 5th order WENO.py method."""
 
-  def __init__(self, equation: equations.Equation, k: int = 3):
-    assert hasattr(equation, 'flux')
+  def __init__(self, equation: equations.Equation, alpha: float = 1.0, **kwargs):
+    assert isinstance(equation, equations.ConservativeBurgersEquation)
     self.equation = equation
-    self.weno = WENO(k=k, dx=equation.grid.reference_dx)
-    self.alpha = 1.0  # For Lax-Friedrich monotone flux
-    self.h = lambda left, right: 0.5 * (left + right - self.alpha * (right - left))  # Lax-Friedrich monotone flux
+    self.weno = WENO(dx=equation.grid.reference_dx)
 
   def __call__(self, t: float, y: np.ndarray) -> np.ndarray:
-    y_L, y_R, yp_L, yp_R= self.weno.reconstruct(y)
-    fL = self.equation.flux(y_L, yp_L)
-    fR = self.equation.flux(y_R, yp_R)
-    flux = self.h(fL, fR)
-    y_t = staggered_first_derivative(flux, self.equation.grid.reference_dx)
+    fd = self.weno.flux_divergence(y)
+    y_t = fd + self.equation.eta * (
+      np.roll(y, 1) + np.roll(y, -1) - (2 * y)
+    )/(self.weno.dx ** 2)  # THIS WORKS ONLY FOR BURGERS and should be inside equations.BurgersEquation
     return self.equation.finalize_time_derivative(t, y_t)
 
 
