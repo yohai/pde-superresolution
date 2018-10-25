@@ -25,12 +25,10 @@ from tensorflow.contrib.training.python.training import hparam_pb2  # pylint: di
 import numpy as np
 import scipy.fftpack
 import scipy.integrate
-from scipy.ndimage.filters import convolve1d
 import tensorflow as tf
 from typing import Tuple
 import xarray
 from .WENO import WENO
-from .equations import staggered_first_derivative
 from pde_superresolution import equations  # pylint: disable=g-bad-import-order
 from pde_superresolution import model  # pylint: disable=g-bad-import-order
 from pde_superresolution import training  # pylint: disable=g-bad-import-order
