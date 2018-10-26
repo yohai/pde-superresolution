@@ -117,7 +117,7 @@ class WENODifferentiator(Differentiator):
   def __init__(self, equation: equations.Equation, alpha: float = 1.0, **kwargs):
     assert isinstance(equation, equations.ConservativeBurgersEquation)
     self.equation = equation
-    self.weno = WENO(dx=equation.grid.reference_dx)
+    self.weno = WENO(dx=equation.grid.solution_dx)
 
   def __call__(self, t: float, y: np.ndarray) -> np.ndarray:
     fd = self.weno.flux_divergence(y)
