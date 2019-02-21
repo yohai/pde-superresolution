@@ -165,7 +165,7 @@ class WENO(object):
     # polynomial reconstruction
     ps = np.matmul(p, ws)
     # smoothness indicators
-    beta_r = np.sum(np.einsum('ijk,kl->ijl', s, ws) ** 2, axis=0)
+    beta_r = np.sum(np.dot(s, ws) ** 2, axis=0)
     alphas = d / (beta_r + self.eps) ** 2
     weights = alphas / alphas.sum(axis=0)
     return np.sum(weights * ps, axis=0)
