@@ -105,8 +105,7 @@ class WENO(object):
   def calculate_time_derivative(self, u: np.ndarray) -> np.ndarray:
     """Returns the WENO approximation of the divergence of the flux."""
     # reconstrution at +1/2 cells
-    u_minus = self.reconstruction(np.roll(u, -1))
-    u_plus = self.reconstruction(u[::-1])[::-1]
+    u_plus, u_minus = self.u_plus_minus(u)
 
     if self.k == 2:
       u_x = (np.roll(u, -1) - u) / self.dx
@@ -139,6 +138,11 @@ class WENO(object):
     # difference of flux at +1/2 and -1/2 cells
     time_deriv = (flux - np.roll(flux, 1)) / self.dx
     return time_deriv
+
+  def u_plus_minus(self, u):
+      u_minus = self.reconstruction(np.roll(u, -1))
+      u_plus = self.reconstruction(u[::-1])[::-1]
+      return u_plus, u_minus
 
   def reconstruction(self, u: np.ndarray) -> np.ndarray:
     """Reconstructs the flux from the point values f.
