@@ -93,8 +93,8 @@ class WENO(object):
       flux_method: monotone flux method.
       k: reconstruction order.
     """
-    #if not isinstance(equation, equations.ConservativeBurgersEquation):
-    #  raise TypeError('invalid equation: {}'.format(equation))
+    if not isinstance(equation, equations.ConservativeBurgersEquation):
+      raise TypeError('invalid equation: {}'.format(equation))
 
     self.equation = equation
     self.flux_method = flux_method
@@ -139,7 +139,7 @@ class WENO(object):
     time_deriv = (flux - np.roll(flux, 1)) / self.dx
     return time_deriv
 
-  def u_plus_minus(self, u):
+  def u_plus_minus(self, u) -> Tuple[np.ndarray, np.ndarray]:
       u_minus = self.reconstruction(np.roll(u, -1))
       u_plus = self.reconstruction(u[::-1])[::-1]
       return u_plus, u_minus
