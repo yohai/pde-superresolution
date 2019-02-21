@@ -21,7 +21,7 @@ import numpy as np
 
 from pde_superresolution import equations  # pylint: disable=g-bad-import-order
 from pde_superresolution import polynomials  # pylint: disable=g-bad-import-order
-
+from typing import Tuple
 
 # constants for k=2 and k=3
 _RECONSTRUCTION_COEFF = {
@@ -93,8 +93,8 @@ class WENO(object):
       flux_method: monotone flux method.
       k: reconstruction order.
     """
-    if not isinstance(equation, equations.ConservativeBurgersEquation):
-      raise TypeError('invalid equation: {}'.format(equation))
+    #if not isinstance(equation, equations.ConservativeBurgersEquation):
+    #  raise TypeError('invalid equation: {}'.format(equation))
 
     self.equation = equation
     self.flux_method = flux_method
@@ -105,11 +105,8 @@ class WENO(object):
   def calculate_time_derivative(self, u: np.ndarray) -> np.ndarray:
     """Returns the WENO approximation of the divergence of the flux."""
     # reconstrution at +1/2 cells
-    p = _RECONSTRUCTION_COEFF[self.k]
-    s = _SMOOTHNESS_COEFF[self.k]
-    d = _WEIGHTS_D[self.k]
-    u_minus = self.reconstruction(np.roll(u, -1), p, s, d)
-    u_plus = self.reconstruction(u, p[::-1, ::-1], s, d[::-1])
+    u_minus = self.reconstruction(np.roll(u, -1))
+    u_plus = self.reconstruction(u[::-1])[::-1]
 
     if self.k == 2:
       u_x = (np.roll(u, -1) - u) / self.dx
@@ -143,13 +140,7 @@ class WENO(object):
     time_deriv = (flux - np.roll(flux, 1)) / self.dx
     return time_deriv
 
-  def reconstruction(
-      self,
-      u: np.ndarray,
-      p: np.ndarray,
-      s: np.ndarray,
-      d: np.ndarray
-  ) -> np.ndarray:
+  def reconstruction(self, u: np.ndarray) -> np.ndarray:
     """Reconstructs the flux from the point values f.
 
     Args:
@@ -162,6 +153,9 @@ class WENO(object):
     Returns:
       Reconstructed flux.
     """
+    p = _RECONSTRUCTION_COEFF[self.k]
+    s = _SMOOTHNESS_COEFF[self.k]
+    d = _WEIGHTS_D[self.k]
     # defined at [+2.5, +1.5, +0.5, -0.5, -1.5] cells (for k=3)
     ws = np.stack([np.roll(u, k) for k in range(-(self.k - 1), self.k)])
     # polynomial reconstruction
