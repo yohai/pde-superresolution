@@ -174,6 +174,22 @@ class IntegrateTest(parameterized.TestCase):
         results_baseline.drop('num_evals'), results_weno.drop('num_evals'),
         rtol=tol, atol=tol)
 
+  @parameterized.parameters(
+    dict(equation=equations.GodunovBurgersEquation(100),
+         differentiator=integrate.WENODifferentiator),
+    dict(equation=equations.ConservativeBurgersEquation(100),
+         differentiator=integrate.PolynomialDifferentiator),
+    dict(equation=equations.BurgersEquation(100),
+         differentiator=integrate.PolynomialDifferentiator))
+  def test_burgers_symmetry(self, equation, differentiator):
+      time = np.random.randn()
+      time_differentiator = differentiator(equation)
+      u = np.random.randn(100)
+      u_t = time_differentiator(time, u)
+      u_tf = -time_differentiator(time, -u[::-1])[::-1]
+      np.testing.assert_allclose(u_t - equation.forcing(time),
+                                 u_tf + equation.forcing(time)[::-1], atol=1e-5)
+
 
 if __name__ == '__main__':
   absltest.main()
