@@ -31,7 +31,6 @@ class WENOTest(parameterized.TestCase):
     u = np.linspace(0, 1)
     actual = weno.calculate_omega(u)
     actual = actual[:, 2:-2]
-    actual = actual[:, 2:-2]
     expected = np.stack(actual.shape[1] * [[0.1, 0.6, 0.3]], axis=1)
     np.testing.assert_allclose(actual, expected)
 
