@@ -28,21 +28,21 @@ from pde_superresolution import weno
 class WENOTest(parameterized.TestCase):
 
   def test_calculate_omega_smooth(self):
-    u = np.linspace(0, 1)
+    u = np.linspace(0, 1, num=100)
     actual = weno.calculate_omega(u)
     actual = actual[:, 2:-2]
     expected = np.stack(actual.shape[1] * [[0.1, 0.6, 0.3]], axis=1)
     np.testing.assert_allclose(actual, expected)
 
   def test_left_coefficients_smooth(self):
-    u = np.linspace(0, 1)
+    u = np.linspace(0, 1, num=100)
     actual = weno.left_coefficients(u)
-    actual = actual[:, 2:-2]
+    actual = actual[:, 2:-2]  # trim edges near discontinuity (becuase of implicit perdiodic boundary condition)
     expected = np.stack(actual.shape[1] * [[2 / 60, -13 / 60, 47 / 60, 27 / 60, -3 / 60]], axis=1)
     np.testing.assert_allclose(actual, expected)
 
   def test_right_coefficients_smooth(self):
-    u = np.linspace(0, 1)
+    u = np.linspace(0, 1, num=100)
     actual = weno.right_coefficients(u)
     actual = actual[:, 2:-3] # TODO: Note that we need 3 here while in the others 2 is enough
     expected = np.stack(actual.shape[1] * [[-3/60, 27/60, 47/60, -13/60, 2/60]], axis=1)

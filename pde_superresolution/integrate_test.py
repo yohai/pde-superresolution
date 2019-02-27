@@ -186,7 +186,7 @@ class IntegrateTest(parameterized.TestCase):
           return -x[::-1]
       time = np.random.randn()
       time_differentiator = differentiator(equation)
-      u = np.random.randn(100)
+      u = np.random.RandomState(0).randn(100)
       u_t = time_differentiator(time,  u)
       u_tf = flip_minus(time_differentiator(time, flip_minus(u)))
       np.testing.assert_allclose(u_t - equation.forcing(time),
